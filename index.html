@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mini-Market POS</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        .pos-container {
+            max-width: 400px;
+            background: #f4f4f4;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            background: white;
+            border: 1px solid #ddd;
+        }
+
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .total-box {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="pos-container">
+        <h2>🏪 Caja Registradora</h2>
+
+        <label>Producto:</label>
+        <input type="text" id="nombre" placeholder="Ej: Arroz 1kg">
+
+        <label>Precio:</label>
+        <input type="number" id="precio" placeholder="0">
+
+        <button onclick="agregarAlCarrito()">➕ Agregar Producto</button>
+
+        <h3>Lista de Compra:</h3>
+        <ul id="lista-visual">
+        </ul>
+
+        <div class="total-box">
+            Total a Pagar: $<span id="total-pagar">0</span>
+        </div>
+    </div>
+
+    <script>
+        // Variable global para guardar los productos
+        let carrito = [];
+        const IVA = 0.19;
+
+        function agregarAlCarrito() {
+            let nombreProducto = document.getElementById("nombre");
+            let precioProducto = document.getElementById("precio");
+            // Modificamos para obtener valores reales y quitamos el value de las variables y se añadimos el la condicional
+            // para q sea mas adelante sea mas facil vaciar las cajas y no toque hacer cambios mas complicados en el codigo.
+            if (nombreProducto.value.trim() === "" || precioProducto.value <= 0) {
+                alert("por favor ingrese un nombre y un precio valido");
+                return;
+            }
+
+            // 1. Crear objeto producto
+            let nuevoItem = {
+                producto: nombreProducto.value,
+                // añadimos un parseFloat sobre el valor de precio para evitar concatenciones de texto
+                //  y obtener la operacion matematica q se espera
+                costo: parseFloat(precioProducto.value)
+            };
+
+            // 2. Guardar en el vector
+            carrito.push(nuevoItem);
+            // limpiamos las cajas de texto despues de agregar el producto
+            nombreProducto.value = "";
+            precioProducto.value = "";
+            // utilizamos el focus para crear una mejor experiencia de usario (ux) para que todo lo pueda hacer desde
+            //  el teclado con un flujo mas facil
+            nombreProducto.focus();
+
+
+            // 3. Actualizar la parte visual
+            actualizarPantalla();
+        }
+
+        function actualizarPantalla() {
+            let listaUL = document.getElementById("lista-visual");
+            let spanTotal = document.getElementById("total-pagar");
+
+            // --- ZONA DE RIESGO ---
+
+            // Recorremos el carrito para dibujar los ítems
+            listaUL.innerHTML = ""; // Limpiar lista antes de redibujar
+
+            let sumaTotal = 0;
+            // remplazmo el ciclo for por un forEach para mejorar la legibilidad del codigo 
+            // y para evitar errores comunes
+            carrito.forEach(function (item) {
+                let li = document.createElement("li");
+                li.innerHTML = `<span>${item.producto}</span> <span>$${item.costo.toLocaleString()}</span>`;
+                listaUL.appendChild(li);
+            });
+            // Calculamos el total
+
+            // Usamos otro ciclo para sumar (separación de intereses)
+            carrito.forEach(function (elemento) {
+                sumaTotal = sumaTotal + parseFloat(elemento.costo);
+            });
+
+            // Aplicar IVA
+            let totalConIva = sumaTotal * (1 + IVA);
+
+            // Regla de Negocio: Si compra más de 50.000, descuento del 10%
+            if (totalConIva > 50000) {
+                console.log("Aplicando descuento...");
+                totalConIva = totalConIva - (totalConIva * 0.10);
+            }
+
+            spanTotal.innerText = totalConIva.toFixed(2);
+        }
+    </script>
+
+</body>
+
+</html>
